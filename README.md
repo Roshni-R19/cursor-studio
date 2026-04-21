@@ -1,70 +1,117 @@
-# Getting Started with Create React App
+# Cursor Studio
+### Design your cursor. Make it yours.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Cursor Studio is a browser-based cursor design tool. Mix and match illustrated parts — bodies, eyes, and accessories — to build a cursor character, or generate one from a text description using Claude AI. Your cursor updates live across the app as you design.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Getting Started
 
-### `npm start`
+### Prerequisites
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- Node.js v18 or higher
+- An Anthropic API key — [console.anthropic.com](https://console.anthropic.com)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Installation
 
-### `npm test`
+**1. Clone the repository**
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+git clone https://github.com/Roshni-R19/cursor-studio.git
+cd cursor-studio
+```
 
-### `npm run build`
+**2. Install dependencies**
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+npm install
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+**3. Set up environment variables**
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Create a `.env` file in the project root:
 
-### `npm run eject`
+```
+REACT_APP_ANTHROPIC_KEY=your_anthropic_key_here
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+**4. Start the development server**
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+npm start
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+**5. Open** [http://localhost:3000](http://localhost:3000)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## Features
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+**Cursor Builder**
+- Pick a body, eyes, and accessory from a library of illustrated parts
+- Generate a custom SVG body from a text description using Claude Haiku
+- Preview updates live as you select parts
+- Your cursor applies across the entire app in real time
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+**Gallery**
+- Save cursors to your personal gallery (persisted in `localStorage`)
+- Load any saved cursor back into the builder
+- Download cursors as PNG files
 
-### Code Splitting
+**Install Guide**
+- Step-by-step instructions for installing a custom cursor on macOS and Windows
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+## Project Structure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```
+src/
+├── pages/
+│   ├── Builder.js        # Main design interface and AI generation
+│   ├── Gallery.js        # Saved cursor gallery
+│   └── InstallGuide.js   # Platform install instructions
+├── assetParts.js         # Canvas compositing logic
+├── LayeredPreview.js     # Live CSS layer preview component
+├── useAssets.js          # Hook to load asset manifest
+└── App.js                # Router and navigation
+public/
+├── bodies/               # Body PNG assets
+├── eyes/                 # Eyes PNG assets
+├── accessories/          # Accessory PNG assets
+└── assets-manifest.json  # Asset registry
+```
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## How It Works
 
-### Advanced Configuration
+Cursor characters are composed of three layers drawn onto an HTML Canvas:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+1. **Body** — the base shape, bottom-aligned in the frame
+2. **Eyes** — centered overlay positioned in the upper-body region
+3. **Accessory** — centered overlay at the top, extending slightly above the body
 
-### Deployment
+The same layer positions are used for both the builder preview (CSS `position: absolute`) and the cursor data URL (HTML Canvas `drawImage`), so what you see in the preview matches the applied cursor exactly.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+AI-generated bodies use Claude Haiku to produce SVG code from a text prompt. The SVG is encoded as a data URL and treated identically to PNG body assets throughout the compositing pipeline.
 
-### `npm run build` fails to minify
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Tech Stack
+
+- **React** — UI and component state
+- **React Router** — client-side navigation
+- **Anthropic Claude API** — AI SVG generation (`claude-haiku-4-5-20251001`)
+- **HTML Canvas API** — cursor image compositing and PNG export
+- **localStorage / sessionStorage** — gallery persistence and builder state handoff
+
+---
+
+## Running Tests
+
+```bash
+npm test
+```
+
+Tests cover the compositing utility, the asset-loading hook, the preview component, and app navigation. See `src/*.test.js` and `src/pages/*.test.js`.

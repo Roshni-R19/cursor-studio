@@ -75,12 +75,12 @@ export async function buildCompositePNG({ bodySrc, eyesSrc, accSrc }, size = 160
     } catch (_) {}
   }
 
-  // Accessory: top:0, centred, 120×120  (renders on top of body + eyes)
+  // Accessory: top:-20, centred, 120×120  (renders on top of body + eyes)
   if (accSrc) {
     try {
       const img = await loadImage(accSrc);
       const aW = 120 * s, aH = 120 * s;
-      ctx.drawImage(img, (W - aW) / 2, 0, aW, aH);
+      ctx.drawImage(img, (W - aW) / 2, -20 * s, aW, aH);
     } catch (_) {}
   }
 

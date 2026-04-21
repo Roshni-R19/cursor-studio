@@ -3,24 +3,7 @@ import { buildCompositePNG } from '../assetParts';
 import LayeredPreview from '../LayeredPreview';
 import useAssets from '../useAssets';
 
-// ─── DALL-E prompt template ───────────────────────────────────────────────────
-const dallePrompt = (desc) =>
-  `A single cute kawaii character, ${desc}, designed to match this exact illustration style: thick black outlines, flat bright colors, simple clean shapes, slightly chubby and round proportions, small cute facial features, sticker-style illustration, white background, centered in frame, no text, no shadows, no gradients. Style reference: like a cute flower shape character, or a cute heart character, or a rainbow arch character — all with the same chunky outlined kawaii sticker aesthetic.`;
-
-// Scale an image src down to a square canvas and return a data URL.
-async function scaleToSquare(src, size) {
-  const canvas = document.createElement('canvas');
-  canvas.width  = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  await new Promise((res, rej) => {
-    const img = new Image();
-    img.onload  = () => { ctx.drawImage(img, 0, 0, size, size); res(); };
-    img.onerror = rej;
-    img.src = src;
-  });
-  return canvas.toDataURL('image/png', 0.92);
-}
+const CLAUDE_SYSTEM = `You are a cursor character designer. Generate a single cute kawaii SVG character based on the description. The SVG must be exactly 160x160 viewBox, with a single centered character that fills about 70% of the space. Use thick black strokes (stroke-width 3), flat bright colors, simple rounded shapes, kawaii style. Return ONLY the raw SVG code starting with <svg, nothing else.`;
 
 // ─── Thumbnail card ───────────────────────────────────────────────────────────
 function Thumb({ label, src, isSelected, onClick }) {
@@ -173,61 +156,55 @@ export default function Builder() {
   // ── Global cursor: inject <style> + set body.style.cursor ──────────────────
   useEffect(() => {
     let alive = true;
-    buildCompositePNG({ bodySrc, eyesSrc, accSrc }, 64, true)
+    buildCompositePNG({ bodySrc, eyesSrc, accSrc }, 96)
       .then(dataUrl => {
         if (!alive) return;
-        // Style tag ensures it overrides everything site-wide
         let el = document.getElementById('cursor-studio-global');
         if (!el) {
           el = document.createElement('style');
           el.id = 'cursor-studio-global';
           document.head.appendChild(el);
         }
-        el.textContent = `*, *::before, *::after { cursor: url("${dataUrl}") 0 0, auto !important; }`;
-        // Also set directly on body as a belt-and-suspenders fallback
-        document.body.style.cursor = `url("${dataUrl}") 0 0, auto`;
+        el.textContent = `*, *::before, *::after { cursor: url("${dataUrl}") 48 60, auto !important; }`;
+        document.body.style.cursor = `url("${dataUrl}") 48 60, auto`;
       })
       .catch(() => {});
     return () => { alive = false; };
   }, [bodySrc, eyesSrc, accSrc]);
 
-  // ── DALL-E 3 image generation ──────────────────────────────────────────────
+  // ── Claude SVG generation ──────────────────────────────────────────────────
   async function handleGenerate() {
     if (!aiPrompt.trim()) return;
     setIsGenerating(true);
     setAiError('');
     try {
-      const apiKey = process.env.REACT_APP_OPENAI_KEY;
-      if (!apiKey) throw new Error('Add REACT_APP_OPENAI_KEY to your .env file.');
-
-      const res = await fetch('https://api.openai.com/v1/images/generations', {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          'x-api-key': process.env.REACT_APP_ANTHROPIC_KEY,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: JSON.stringify({
-          model: 'dall-e-3',
-          prompt: dallePrompt(aiPrompt),
-          n: 1,
-          size: '1024x1024',
-          quality: 'standard',
-          style: 'vivid',
-          response_format: 'b64_json',
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 2048,
+          system: CLAUDE_SYSTEM,
+          messages: [{ role: 'user', content: aiPrompt }],
         }),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error?.message || 'OpenAI image generation failed');
+        throw new Error(err.error?.message || 'Claude API request failed');
       }
 
       const data = await res.json();
-      const rawDataUrl = `data:image/png;base64,${data.data[0].b64_json}`;
-      // Scale down from 1024×1024 → 300×300 to keep localStorage manageable
-      const scaledDataUrl = await scaleToSquare(rawDataUrl, 300);
+      const svgCode = data.content[0].text.trim();
+      console.log('[Cursor Studio] Raw SVG from Claude:', svgCode);
+      const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgCode);
 
-      setGeneratedImage(scaledDataUrl);
+      setGeneratedImage(svgDataUrl);
       setSelectedBody('ai_generated');
     } catch (e) {
       setAiError(e.message);
@@ -407,7 +384,7 @@ export default function Builder() {
             padding: '40px 20px',
             overflow: 'visible',
           }}>
-            <LayeredPreview bodySrc={bodySrc} eyesSrc={eyesSrc} accSrc={accSrc} size={160} />
+            <LayeredPreview bodySrc={bodySrc} eyesSrc={eyesSrc} accSrc={accSrc} size={200} />
           </div>
 
           {/* Cursor name */}

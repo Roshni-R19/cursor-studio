@@ -46,7 +46,7 @@ export default function LayeredPreview({ bodySrc, eyesSrc, accSrc, size = 160 })
         />
       )}
 
-      {/* Accessory — top, renders over body & eyes */}
+      {/* Accessory — top:-20px scaled, renders over body & eyes */}
       {accSrc && (
         <img
           src={accSrc}
@@ -54,7 +54,7 @@ export default function LayeredPreview({ bodySrc, eyesSrc, accSrc, size = 160 })
           draggable={false}
           style={{
             position: 'absolute',
-            top: 0,
+            top: -20 * s,
             left: '50%',
             transform: 'translateX(-50%)',
             width: 120 * s,
