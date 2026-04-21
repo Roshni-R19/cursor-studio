@@ -1,0 +1,19 @@
+{
+  "bodies": [
+    { "key": "flower", "label": "Flower",  "src": "/bodies/Flower Shape.png" },
+    { "key": "heart",  "label": "Heart",   "src": "/bodies/Heart Icon.png"   },
+    { "key": "shape",  "label": "Image 1", "src": "/bodies/Image-1.png"      }
+  ],
+  "eyes": [
+    { "key": "none",   "label": "None",   "src": null                   },
+    { "key": "dots",   "label": "Dots",   "src": "/eyes/Dots Image.png" },
+    { "key": "style1", "label": "Eyes 1", "src": "/eyes/Eyes 1.png"     },
+    { "key": "style2", "label": "Eyes 2", "src": "/eyes/Eyes 2.png"     }
+  ],
+  "accessories": [
+    { "key": "none",       "label": "None",        "src": null                                },
+    { "key": "hat",        "label": "Hat",         "src": "/accessories/Hat Image.png"        },
+    { "key": "headphones", "label": "Headphones",  "src": "/accessories/Headphones Icon.png"  },
+    { "key": "extra",      "label": "Image",       "src": "/accessories/Image.png"            }
+  ]
+}
