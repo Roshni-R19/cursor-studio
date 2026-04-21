@@ -5,6 +5,35 @@ import useAssets from '../useAssets';
 
 const CLAUDE_SYSTEM = `You are a cursor character designer. Generate a single cute kawaii SVG character based on the description. The SVG must be exactly 160x160 viewBox, with a single centered character that fills about 70% of the space. Use thick black strokes (stroke-width 3), flat bright colors, simple rounded shapes, kawaii style. Return ONLY the raw SVG code starting with <svg, nothing else.`;
 
+// Strip markdown fences, extract the <svg>...</svg> block, and guarantee the
+// attributes browsers require when loading SVG via <img> or canvas drawImage.
+function cleanSvg(raw) {
+  // Remove any markdown code fences (```svg, ```xml, ```, etc.)
+  let s = raw.replace(/^```[a-z]*\n?/i, '').replace(/```\s*$/i, '').trim();
+
+  // Extract from the first <svg to the last </svg>
+  const start = s.indexOf('<svg');
+  const end   = s.lastIndexOf('</svg>');
+  if (start !== -1 && end !== -1) {
+    s = s.slice(start, end + 6);
+  }
+
+  // Inject xmlns if missing — required for <img> and canvas
+  if (!s.includes('xmlns=')) {
+    s = s.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+  }
+
+  // Inject explicit width/height if missing — required for canvas drawImage sizing
+  if (!s.includes('width=')) {
+    s = s.replace('<svg', '<svg width="160"');
+  }
+  if (!s.includes('height=')) {
+    s = s.replace('<svg', '<svg height="160"');
+  }
+
+  return s;
+}
+
 // ─── Thumbnail card ───────────────────────────────────────────────────────────
 function Thumb({ label, src, isSelected, onClick }) {
   const [hov, setHov] = useState(false);
@@ -200,8 +229,10 @@ export default function Builder() {
       }
 
       const data = await res.json();
-      const svgCode = data.content[0].text.trim();
-      console.log('[Cursor Studio] Raw SVG from Claude:', svgCode);
+      const rawText = data.content[0].text.trim();
+      console.log('[Cursor Studio] Raw response from Claude:', rawText);
+      const svgCode = cleanSvg(rawText);
+      console.log('[Cursor Studio] Cleaned SVG:', svgCode);
       const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgCode);
 
       setGeneratedImage(svgDataUrl);
